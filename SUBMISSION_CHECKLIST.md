@@ -8,7 +8,7 @@
 - [x] Pruebas, lint, Dockerfile y CI.
 - [x] Conectar esta carpeta con el repositorio público de GitHub.
 - [x] Crear el commit inicial y hacer `push` a `main`.
-- [ ] Confirmar que GitHub Actions termine en verde.
+- [x] Confirmar que [GitHub Actions #2](https://github.com/EmiEscudero/Challenge_AluraAgente-AAMIA/actions/runs/30292940897) termine en verde, incluida la construcción Docker.
 - [x] Verificar que ningún secreto o PDF aportado sin permiso de redistribución esté publicado.
 
 ## Oracle Cloud
