@@ -15,6 +15,8 @@ Agente RAG en español para consultar una biblioteca documental sobre cuidado de
 
 La secuencia muestra una consulta real ejecutada en Docker: AAMIA recibe la pregunta, recupera evidencia de la biblioteca y presenta los documentos y páginas PDF utilizados.
 
+▶️ **[Ver video de demostración (WebM, 11 segundos)](evidence/aamia-demo.webm)**
+
 ## Problema y objetivo
 
 Familiares, cuidadores y equipos de apoyo suelen tener que buscar información en manuales extensos y dispersos. AAMIA transforma una colección de PDF en una biblioteca conversacional: recibe una pregunta, recupera los fragmentos más relevantes, construye una respuesta y muestra el documento y la página PDF utilizados.
