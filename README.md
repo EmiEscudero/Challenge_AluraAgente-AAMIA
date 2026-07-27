@@ -9,7 +9,11 @@ Agente RAG en español para consultar una biblioteca documental sobre cuidado de
 
 > **Aviso:** AAMIA ofrece información educativa basada en los documentos cargados. No diagnostica, no prescribe y no sustituye una valoración médica. Ante una posible urgencia, indica contactar inmediatamente a los servicios de emergencia locales.
 
-![AAMIA respondiendo una pregunta con fuentes](evidence/local-answer.png)
+## Demostración
+
+![AAMIA consultando la biblioteca y mostrando sus fuentes](evidence/aamia-demo.gif)
+
+La secuencia muestra una consulta real ejecutada en Docker: AAMIA recibe la pregunta, recupera evidencia de la biblioteca y presenta los documentos y páginas PDF utilizados.
 
 ## Problema y objetivo
 
