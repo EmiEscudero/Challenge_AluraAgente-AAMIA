@@ -1,0 +1,22 @@
+services:
+  aamia:
+    build: .
+    image: aamia:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8501:8501"
+    volumes:
+      - aamia-index:/app/data/index
+      - aamia-logs:/app/logs
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8501/_stcore/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      start_period: 90s
+      retries: 3
+
+volumes:
+  aamia-index:
+  aamia-logs:
