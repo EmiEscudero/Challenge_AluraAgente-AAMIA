@@ -10,7 +10,7 @@ Estas imágenes corresponden a la ejecución local verificada el 27 de julio de 
 
 ## Pendientes al desplegar en OCI
 
-1. Captura de **Container Instance Details** o **Compute Instance Details** con estado `Running`.
+1. Captura de **Compute Instance Details** con estado `Running` y shape `VM.Standard.A1.Flex`.
 2. Captura de la app abierta mediante la IP o URL pública de OCI.
 3. En la app, expandir “Ver fuentes consultadas” para mostrar documento y página.
 4. Guardar las imágenes como `oci-running.png` y `oci-app.png`.

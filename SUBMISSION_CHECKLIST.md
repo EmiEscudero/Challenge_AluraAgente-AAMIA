@@ -5,17 +5,16 @@
 - [x] Aplicación funcional en local.
 - [x] Ingesta de PDF, recuperación, fuentes y fallback.
 - [x] README, arquitectura, ejecución y ejemplos.
-- [x] Pruebas, lint, Docker y CI.
-- [ ] Conectar esta carpeta con el repositorio público de GitHub.
-- [ ] Crear el commit final y hacer `push`.
+- [x] Pruebas, lint, Dockerfile y CI.
+- [x] Conectar esta carpeta con el repositorio público de GitHub.
+- [x] Crear el commit inicial y hacer `push` a `main`.
 - [ ] Confirmar que GitHub Actions termine en verde.
-- [ ] Verificar que ningún secreto o PDF sin permiso de redistribución esté publicado.
+- [x] Verificar que ningún secreto o PDF aportado sin permiso de redistribución esté publicado.
 
 ## Oracle Cloud
 
-- [ ] Crear repositorio en OCIR.
-- [ ] Construir y publicar la imagen con `deploy/oci/prepare-image.ps1`.
-- [ ] Crear una OCI Container Instance o una VM Compute.
+- [ ] Crear una VM Compute `VM.Standard.A1.Flex` Always Free (1 OCPU, 6 GB).
+- [ ] Clonar el repositorio y ejecutar `deploy/oci/bootstrap.sh`.
 - [ ] Abrir TCP 8501 en el NSG únicamente para la demostración.
 - [ ] Confirmar `/_stcore/health` = `ok` desde la URL pública.
 - [ ] Probar alimentación, ejercicio y pregunta fuera de alcance.
