@@ -4,8 +4,10 @@ Agente RAG en español para consultar una biblioteca documental sobre cuidado de
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.x-FF4B4B?logo=streamlit&logoColor=white)
-![OCI](https://img.shields.io/badge/Deploy-Oracle_Cloud-F80000?logo=oracle&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-10_passed-1f7a5c)
+![Deploy](https://img.shields.io/badge/Deploy-Streamlit_Cloud-FF4B4B?logo=streamlit&logoColor=white)
+![Tests](https://img.shields.io/badge/tests-14_passed-1f7a5c)
+
+🌐 **[Abrir AAMIA en Streamlit Cloud](https://challenge-alura-gente-aamia.streamlit.app/)**
 
 > **Aviso:** AAMIA ofrece información educativa basada en los documentos cargados. No diagnostica, no prescribe y no sustituye una valoración médica. Ante una posible urgencia, indica contactar inmediatamente a los servicios de emergencia locales.
 
@@ -26,6 +28,7 @@ El objetivo del proyecto es facilitar el acceso a información documental sin oc
 ## Funcionalidades
 
 - Descubrimiento automático de todos los PDF dentro de `docs/`.
+- Carga de hasta 5 PDF de 15 MB cada uno para crear una biblioteca BM25 temporal y aislada por sesión.
 - Extracción por página, limpieza de texto y fragmentación con solapamiento.
 - Recuperación BM25 local con expansión de términos del dominio y reranking por diversidad.
 - Respuestas respaldadas por fuentes, título del documento y página PDF.
@@ -40,7 +43,7 @@ El objetivo del proyecto es facilitar el acceso a información documental sin oc
 
 ## Resultado de la ingesta real
 
-La validación local utilizó los 19 PDF de trabajo más la guía abierta incluida en el repositorio. Un despliegue creado directamente desde GitHub sólo recibe la guía abierta, porque los otros archivos no forman parte del repositorio.
+La validación local utilizó los 19 PDF de trabajo más la guía abierta incluida en el repositorio. El despliegue creado directamente desde GitHub inicia con la guía abierta y permite que cada visitante cargue sus propios documentos temporalmente.
 
 | Métrica | Resultado |
 |---|---:|
@@ -55,7 +58,7 @@ La validación local utilizó los 19 PDF de trabajo más la guía abierta inclui
 
 ```mermaid
 flowchart LR
-    A["PDF en docs/"] --> B["Extracción por página con pypdf"]
+    A["PDF en docs/ o carga temporal"] --> B["Extracción por página con pypdf"]
     B --> C["Limpieza y chunking con metadatos"]
     C --> D["Índice BM25 persistente"]
     Q["Pregunta en Streamlit"] --> S["Filtro de alcance y urgencias"]
@@ -102,6 +105,7 @@ Con la configuración predeterminada `LLM_PROVIDER=extractive` no se ejecuta un 
 ├── eldercare_agent/
 │   ├── ingestion.py              # Extracción, limpieza y fragmentación
 │   ├── retriever.py              # Índice BM25 y reranking
+│   ├── uploads.py                # Corpus temporal aislado por sesión
 │   ├── llm.py                    # Modos extractivo, OpenAI y OCI
 │   ├── service.py                # Orquestación del agente
 │   ├── safety.py                 # Alcance, urgencias y aviso médico
@@ -138,6 +142,8 @@ streamlit run app.py
 ```
 
 Abre <http://localhost:8501>. En el primer arranque, la aplicación construye `data/index/bm25-index.json.gz`. Con la colección incluida localmente tomó aproximadamente un minuto; los siguientes arranques cargan el índice existente.
+
+Desde la barra lateral también puedes cargar hasta 5 PDF de 15 MB cada uno. La aplicación construye un índice BM25 separado para esa sesión; al volver a la biblioteca pública o finalizar la sesión, elimina los archivos y el índice temporal. Los PDF escaneados sin una capa de texto requieren OCR previo.
 
 También puedes usar la terminal:
 
@@ -202,10 +208,10 @@ python -m unittest discover -s tests -v
 
 Validaciones realizadas:
 
-- 10 pruebas unitarias aprobadas.
+- 14 pruebas unitarias y de integración aprobadas.
 - Smoke test sobre alimentación, actividad física, memoria, caídas y una pregunta fuera de alcance.
 - Health check local: `/_stcore/health` responde `200 ok`.
-- Revisión visual en navegador a 1440 × 1100.
+- Prueba de interfaz en navegador a 1440 × 1100, incluida la carga de un PDF y una consulta BM25 con fuentes.
 - Ingesta completa de los 20 PDF sin errores.
 
 ## Docker
@@ -218,7 +224,11 @@ docker compose ps
 
 La imagen corre como usuario sin privilegios, expone el puerto `8501` y tiene health check. Los volúmenes conservan el índice y los logs. El build incorpora los PDF que existan en `docs/`.
 
-## Despliegue en Oracle Cloud
+## Despliegue
+
+La aplicación está publicada en **[Streamlit Community Cloud](https://challenge-alura-gente-aamia.streamlit.app/)** desde la rama `main`. El despliegue utiliza `app.py`, `requirements.txt` y `.streamlit/config.toml` directamente desde este repositorio.
+
+### Oracle Cloud
 
 La ruta recomendada para mantener costo cero es una VM **OCI Compute VM.Standard.A1.Flex** con 1 OCPU y 6 GB de RAM, Ubuntu y Docker Compose. No requiere OCI Generative AI: deja `LLM_PROVIDER=extractive` para evitar consumo de APIs pagadas. La guía desde la creación de la cuenta hasta la validación pública está en [deploy/oci/README.md](deploy/oci/README.md).
 
@@ -226,6 +236,8 @@ La ruta recomendada para mantener costo cero es una VM **OCI Compute VM.Standard
 
 - Las respuestas dependen de la calidad y vigencia de los documentos.
 - Las páginas sin texto OCR se omiten; para una colección totalmente escaneada debe agregarse OCR.
+- Las cargas están limitadas a 5 PDF de 15 MB cada uno y permanecen en almacenamiento temporal aislado por sesión.
+- No deben cargarse expedientes clínicos ni documentos con datos personales o sensibles.
 - El modo extractivo es deliberadamente conservador y puede conservar rasgos de redacción del documento.
 - Las citas usan el número de página física del PDF, que puede diferir de la numeración impresa.
 - La detección de urgencias es preventiva, no un sistema de triaje clínico.

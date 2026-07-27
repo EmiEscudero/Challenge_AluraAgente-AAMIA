@@ -18,6 +18,14 @@ from eldercare_agent.models import AgentResponse, DocumentChunk, SearchResult
 from eldercare_agent.safety import MEDICAL_DISCLAIMER
 from eldercare_agent.service import ElderCareAgent
 from eldercare_agent.text import compact_excerpt
+from eldercare_agent.uploads import (
+    MAX_UPLOAD_FILES,
+    MAX_UPLOAD_MB,
+    SessionCorpus,
+    UploadedPDF,
+    UploadValidationError,
+    build_session_corpus,
+)
 
 st.set_page_config(
     page_title="AAMIA | Apoyo al Adulto Mayor IA",
@@ -111,7 +119,7 @@ def load_agent() -> tuple[ElderCareAgent, bool]:
     return ElderCareAgent.create(Settings.from_env())
 
 
-def render_sources(message_id: str, source_data: list[dict]) -> None:
+def render_sources(message_id: str, source_data: list[dict], active_agent: ElderCareAgent) -> None:
     if not source_data:
         return
     with st.expander(f"Ver {len(source_data)} fuentes consultadas", expanded=False):
@@ -132,11 +140,11 @@ def render_sources(message_id: str, source_data: list[dict]) -> None:
     if feedback_key not in st.session_state:
         left, right, _spacer = st.columns([1, 1, 7])
         if left.button("👍 Útil", key=f"up_{message_id}", use_container_width=True):
-            write_feedback(settings.logs_dir, st.session_state.session_id, message_id, "positive")
+            write_feedback(active_agent.settings.logs_dir, st.session_state.session_id, message_id, "positive")
             st.session_state[feedback_key] = "positive"
             st.rerun()
         if right.button("👎 Mejorar", key=f"down_{message_id}", use_container_width=True):
-            write_feedback(settings.logs_dir, st.session_state.session_id, message_id, "negative")
+            write_feedback(active_agent.settings.logs_dir, st.session_state.session_id, message_id, "negative")
             st.session_state[feedback_key] = "negative"
             st.rerun()
     else:
@@ -162,14 +170,21 @@ st.markdown(f'<div class="notice">⚕️ {MEDICAL_DISCLAIMER}</div>', unsafe_all
 
 try:
     with st.spinner("Preparando la biblioteca documental…"):
-        agent, rebuilt = load_agent()
+        base_agent, rebuilt = load_agent()
 except Exception as exc:  # noqa: BLE001 - present a friendly startup error in the UI
     st.error(f"No fue posible iniciar el agente: {exc}")
     st.info("Verifica que exista al menos un PDF en `docs/` y revisa la configuración del archivo `.env`.")
     st.stop()
 
+session_corpus: SessionCorpus | None = st.session_state.get("session_corpus")
+agent = session_corpus.agent if session_corpus is not None else base_agent
+
 with st.sidebar:
     st.title("Biblioteca")
+    if session_corpus is None:
+        st.caption("Biblioteca pública incluida")
+    else:
+        st.caption("Biblioteca temporal · " + ", ".join(session_corpus.documents))
     stats = agent.stats
     first, second = st.columns(2)
     first.metric("PDF", stats["documents"])
@@ -181,12 +196,57 @@ with st.sidebar:
         "oci": f"OCI GenAI · {settings.oci_genai_model}",
     }.get(settings.llm_provider, settings.llm_provider)
     st.markdown(f'<span class="status-chip">{html.escape(provider_label)}</span>', unsafe_allow_html=True)
-    if rebuilt:
+    if rebuilt and session_corpus is None:
         st.success("Índice documental actualizado.")
     if stats["errors"]:
         st.warning(f"La ingesta terminó con {stats['errors']} avisos no críticos.")
     st.divider()
-    if st.button("🔄 Reconstruir índice", use_container_width=True):
+    st.subheader("Tus documentos")
+    uploaded_files = st.file_uploader(
+        "Carga manuales sobre cuidado de personas adultas mayores",
+        type=["pdf"],
+        accept_multiple_files=True,
+        max_upload_size=MAX_UPLOAD_MB,
+        help=(
+            f"Hasta {MAX_UPLOAD_FILES} PDF de {MAX_UPLOAD_MB} MB cada uno. "
+            "Los archivos y su índice se eliminan al terminar la sesión."
+        ),
+    )
+    if st.button(
+        "📚 Crear biblioteca temporal",
+        use_container_width=True,
+        disabled=not uploaded_files,
+    ):
+        try:
+            if len(uploaded_files) > MAX_UPLOAD_FILES:
+                raise UploadValidationError(
+                    f"Puedes cargar como máximo {MAX_UPLOAD_FILES} archivos PDF."
+                )
+            uploads = [UploadedPDF(file.name, file.getvalue()) for file in uploaded_files]
+            with st.spinner("Extrayendo texto y construyendo el índice BM25…"):
+                new_corpus = build_session_corpus(uploads, settings)
+        except UploadValidationError as exc:
+            st.error(str(exc))
+        except Exception as exc:  # noqa: BLE001 - keep upload failures isolated from the public corpus
+            st.error(f"No fue posible procesar los archivos: {type(exc).__name__}.")
+        else:
+            previous_corpus: SessionCorpus | None = st.session_state.get("session_corpus")
+            if previous_corpus is not None:
+                previous_corpus.close()
+            st.session_state.session_corpus = new_corpus
+            st.session_state.messages = []
+            st.session_state.session_id = str(uuid.uuid4())
+            st.rerun()
+    if session_corpus is not None and st.button(
+        "↩️ Volver a la biblioteca pública",
+        use_container_width=True,
+    ):
+        session_corpus.close()
+        del st.session_state["session_corpus"]
+        st.session_state.messages = []
+        st.session_state.session_id = str(uuid.uuid4())
+        st.rerun()
+    if session_corpus is None and st.button("🔄 Reconstruir índice", use_container_width=True):
         with st.spinner("Leyendo nuevamente los PDF…"):
             ElderCareAgent.create(settings, force_rebuild=True)
             load_agent.clear()
@@ -197,7 +257,10 @@ with st.sidebar:
         st.session_state.session_id = str(uuid.uuid4())
         st.rerun()
     st.divider()
-    st.caption("Privacidad: por defecto los logs guardan hashes y metadatos, no el texto de las conversaciones.")
+    st.caption(
+        "Privacidad: los archivos cargados son temporales. Evita documentos clínicos o datos personales. "
+        "Por defecto, los logs no guardan el texto de las conversaciones."
+    )
 
 st.subheader("¿Qué te gustaría consultar?")
 suggestions = [
@@ -226,7 +289,7 @@ for message in st.session_state.messages:
             st.caption(meta)
             if message.get("fallback_used"):
                 st.warning("El proveedor configurado no respondió; se utilizó el modo local como respaldo.")
-            render_sources(message["id"], message.get("sources", []))
+            render_sources(message["id"], message.get("sources", []), agent)
 
 typed_question = st.chat_input("Pregunta sobre cuidados, alimentación, ejercicio o bienestar…", max_chars=2_000)
 question = pending_question or typed_question
@@ -255,4 +318,4 @@ if question:
             **_response_to_dict(response),
         }
         st.session_state.messages.append(assistant_message)
-        render_sources(assistant_message["id"], assistant_message["sources"])
+        render_sources(assistant_message["id"], assistant_message["sources"], agent)
