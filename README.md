@@ -11,11 +11,11 @@ Agente RAG en español para consultar una biblioteca documental sobre cuidado de
 
 ## Demostración
 
-![AAMIA consultando la biblioteca y mostrando sus fuentes](evidence/aamia-demo.gif)
+[![Ver la demostración de AAMIA en YouTube](https://i.ytimg.com/vi/m-19G62AS6g/hqdefault.jpg)](https://youtu.be/m-19G62AS6g)
 
-La secuencia muestra una consulta real ejecutada en Docker: AAMIA recibe la pregunta, recupera evidencia de la biblioteca y presenta los documentos y páginas PDF utilizados.
+El video muestra una consulta real ejecutada en Docker: AAMIA recibe la pregunta, recupera evidencia de la biblioteca y presenta los documentos y páginas PDF utilizados.
 
-▶️ **[Ver video de demostración (WebM, 11 segundos)](evidence/aamia-demo.webm)**
+▶️ **[Reproducir la demostración completa en YouTube](https://youtu.be/m-19G62AS6g)**
 
 ## Problema y objetivo
 
