@@ -13,7 +13,7 @@ Agente RAG en español para consultar una biblioteca documental sobre cuidado de
 
 ## Problema y objetivo
 
-Familiares, cuidadores y equipos de apoyo suelen tener que buscar información en manuales extensos y dispersos. AAMIA transforma una colección de PDF en una biblioteca conversacional: recibe una pregunta, recupera los fragmentos más relevantes, genera una respuesta prudente y muestra el documento y la página PDF utilizados.
+Familiares, cuidadores y equipos de apoyo suelen tener que buscar información en manuales extensos y dispersos. AAMIA transforma una colección de PDF en una biblioteca conversacional: recibe una pregunta, recupera los fragmentos más relevantes, construye una respuesta y muestra el documento y la página PDF utilizados.
 
 El objetivo del proyecto es facilitar el acceso a información documental sin ocultar su procedencia ni convertir al agente en sustituto de profesionales de salud.
 
@@ -33,6 +33,8 @@ El objetivo del proyecto es facilitar el acceso a información documental sin oc
 - Docker, Docker Compose, health check, CI y guía de despliegue en OCI.
 
 ## Resultado de la ingesta real
+
+La validación local utilizó los 19 PDF de trabajo más la guía abierta incluida en el repositorio. Un despliegue creado directamente desde GitHub sólo recibe la guía abierta, porque los otros archivos no forman parte del repositorio.
 
 | Métrica | Resultado |
 |---|---:|
@@ -65,6 +67,16 @@ flowchart LR
 
 La recuperación es local y barata: no requiere descargar modelos ni una base vectorial externa. El proveedor generativo recibe únicamente los fragmentos seleccionados y un prompt que exige responder desde el contexto, citar fuentes y reconocer cuando falta información.
 
+## Cómo se procesa una pregunta
+
+1. Al iniciar, `pypdf` extrae el texto de cada página, lo limpia y lo divide en fragmentos con metadatos.
+2. Los fragmentos se guardan en un índice BM25 comprimido dentro de `data/index/`.
+3. La pregunta pasa por los filtros de alcance y posibles urgencias.
+4. BM25 recupera los fragmentos con mayor coincidencia y el reranker selecciona hasta cinco fuentes distintas.
+5. El proveedor configurado construye la respuesta y la interfaz muestra sus fuentes y páginas.
+
+Con la configuración predeterminada `LLM_PROVIDER=extractive` no se ejecuta un modelo de lenguaje. El sistema puntúa las oraciones recuperadas por coincidencia con la pregunta y presenta las tres más relevantes. Esto evita API keys y costo por consulta, aunque la redacción es menos natural que la de un LLM.
+
 ## Tecnologías
 
 - **Python 3.12**: aplicación y pipeline.
@@ -88,7 +100,7 @@ La recuperación es local y barata: no requiere descargar modelos ni una base ve
 │   ├── service.py                # Orquestación del agente
 │   ├── safety.py                 # Alcance, urgencias y aviso médico
 │   └── audit.py                  # Trazabilidad y feedback
-├── docs/                          # PDF autorizados
+├── docs/                          # Base documental
 ├── scripts/                       # Indexación y smoke test
 ├── tests/                         # Pruebas unitarias
 ├── deploy/oci/                    # Automatización y guía OCI
@@ -131,11 +143,13 @@ python scripts/smoke_test.py
 
 ## Configuración del modelo
 
-El proyecto funciona inmediatamente con:
+El despliegue gratuito descrito en este repositorio usa:
 
 ```dotenv
 LLM_PROVIDER=extractive
 ```
+
+Este modo no llama a OpenAI ni a OCI Generative AI. Si se configura un proveedor generativo, BM25 sigue haciendo la recuperación y únicamente los fragmentos seleccionados se envían al modelo:
 
 Para obtener respuestas redactadas y sintetizadas con OpenAI:
 
@@ -186,7 +200,7 @@ Validaciones realizadas:
 - Smoke test sobre alimentación, actividad física, memoria, caídas y una pregunta fuera de alcance.
 - Health check local: `/_stcore/health` responde `200 ok`.
 - Revisión visual en navegador a 1440 × 1100.
-- Ingesta completa de los 19 PDF sin errores.
+- Ingesta completa de los 20 PDF sin errores.
 
 ## Docker
 
@@ -196,29 +210,11 @@ docker compose up --build -d
 docker compose ps
 ```
 
-La imagen corre como usuario sin privilegios, expone el puerto `8501` y tiene health check. Los volúmenes conservan el índice y los logs. El build incorpora los PDF que existan localmente en `docs/`; utiliza únicamente documentos que estés autorizado a procesar y desplegar.
+La imagen corre como usuario sin privilegios, expone el puerto `8501` y tiene health check. Los volúmenes conservan el índice y los logs. El build incorpora los PDF que existan en `docs/`.
 
 ## Despliegue en Oracle Cloud
 
 La ruta recomendada para mantener costo cero es una VM **OCI Compute VM.Standard.A1.Flex** con 1 OCPU y 6 GB de RAM, Ubuntu y Docker Compose. No requiere OCI Generative AI: deja `LLM_PROVIDER=extractive` para evitar consumo de APIs pagadas. La guía desde la creación de la cuenta hasta la validación pública está en [deploy/oci/README.md](deploy/oci/README.md).
-
-Al finalizar el despliegue, agrega aquí:
-
-- **Aplicación:** `PENDIENTE_URL_OCI`
-- **Evidencia de OCI:** reemplaza este texto con una captura de la instancia en estado `Running` y otra de la aplicación abierta desde su IP pública.
-
-Las capturas actuales de `evidence/` prueban la ejecución local y están identificadas como tales; no se presentan como evidencia de nube.
-
-## Documentos y derechos de autor
-
-La revisión de las páginas legales de los 19 PDF locales no encontró ninguna obra con licencia abierta o dominio público confirmado. Muchos documentos indican expresamente “todos los derechos reservados” o prohíben su reproducción. Por ello, los PDF están excluidos de Git y **no deben subirse a GitHub, una imagen pública ni Google Drive** sin autorización del titular.
-
-- [Guía abierta de AAMIA para acompañar el cuidado cotidiano](docs/AAMIA_guia_abierta_para_el_cuidado.pdf): documento original del proyecto, licencia CC BY 4.0; sí puede compartirse y viene incluido en el repositorio para que el demo tenga una fuente legal.
-- [Auditoría completa de licencias](docs/COPYRIGHT_AUDIT.md)
-- [Manual de apoyo con el cuidado de personas adultas mayores — fuente oficial INAPAM](https://www.gob.mx/inapam/documentos/122471). Puede enlazarse a la publicación oficial; no se afirma permiso para rehostear el archivo.
-- **Carpeta pública de Google Drive:** `PENDIENTE_URL_GOOGLE_DRIVE`. Puedes subir la guía abierta de AAMIA y añadir aquí la URL cuando crees la carpeta.
-
-La ausencia de un aviso de copyright no equivale a permiso de redistribución. Esta revisión es preventiva y no sustituye asesoría legal.
 
 ## Seguridad, privacidad y límites
 
@@ -228,7 +224,6 @@ La ausencia de un aviso de copyright no equivale a permiso de redistribución. E
 - Las citas usan el número de página física del PDF, que puede diferir de la numeración impresa.
 - La detección de urgencias es preventiva, no un sistema de triaje clínico.
 - `LOG_CONTENT=false` evita guardar preguntas y respuestas completas. Actívalo solo con una política de privacidad adecuada.
-- Antes de publicar PDF en GitHub o incorporarlos a una imagen pública, verifica su licencia y los datos personales que puedan contener.
 
 Consulta [SECURITY.md](SECURITY.md) para reportar vulnerabilidades y revisar las medidas implementadas.
 
@@ -237,8 +232,7 @@ Consulta [SECURITY.md](SECURITY.md) para reportar vulnerabilidades y revisar las
 - [Pantalla inicial local](evidence/local-app.png)
 - [Respuesta local con fuentes](evidence/local-answer.png)
 - [Detalle local de documentos y páginas](evidence/local-answer-sources.png)
-- [Notas de evidencia y checklist](evidence/README.md)
 
 ## Licencia
 
-El código se distribuye bajo licencia MIT. Los documentos de `docs/` mantienen sus licencias originales y no quedan cubiertos por la licencia del código.
+El código se distribuye bajo licencia MIT. La guía de AAMIA incluida en `docs/` se distribuye bajo CC BY 4.0.

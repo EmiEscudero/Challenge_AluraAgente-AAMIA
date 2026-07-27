@@ -178,7 +178,7 @@ Guarda al menos:
 2. Captura de AAMIA abierta desde la IP pública.
 3. Captura de una respuesta con sus fuentes y páginas.
 4. Captura de `docker compose ps` mostrando `healthy`.
-5. URL pública escrita en el README sustituyendo `PENDIENTE_URL_OCI`.
+5. URL pública de la aplicación.
 
 ## Solución rápida de problemas
 

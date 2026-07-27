@@ -17,9 +17,6 @@ data/index/
 logs/*.jsonl
 tmp/
 
-# Source PDFs are intentionally excluded from a public repository because
-# several supplied books may be copyrighted. Build images locally to include
-# authorized PDFs, or mount/copy them during deployment.
 docs/**/*.pdf
 !docs/AAMIA_guia_abierta_para_el_cuidado.pdf
 

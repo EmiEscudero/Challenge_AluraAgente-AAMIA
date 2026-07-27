@@ -2,7 +2,7 @@
 
 ## Datos y alcance
 
-AAMIA es una herramienta educativa, no un dispositivo médico. No debe recibir expedientes clínicos, identificadores personales ni secretos. La persona responsable del despliegue debe revisar las licencias y la sensibilidad de cada PDF.
+AAMIA es una herramienta educativa, no un dispositivo médico. No debe recibir expedientes clínicos, identificadores personales ni secretos.
 
 ## Medidas implementadas
 
