@@ -1,4 +1,4 @@
-"""Generate the openly licensed starter guide bundled with AAMIA."""
+"""Genera la guía inicial con licencia abierta incluida en AAMIA."""
 
 from __future__ import annotations
 

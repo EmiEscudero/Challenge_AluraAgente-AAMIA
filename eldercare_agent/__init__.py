@@ -1,4 +1,4 @@
-"""AAMIA: a small, auditable RAG assistant for elder care."""
+"""AAMIA: un pequeño asistente RAG auditable para el cuidado de personas mayores."""
 
 from .config import Settings
 from .service import ElderCareAgent

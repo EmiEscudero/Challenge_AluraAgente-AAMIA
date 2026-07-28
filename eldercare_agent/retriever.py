@@ -16,7 +16,7 @@ INDEX_VERSION = 3
 
 
 class BM25Retriever:
-    """Compact BM25 index with query expansion and diversity reranking."""
+    """Índice BM25 compacto con expansión de consultas y reordenamiento por diversidad."""
 
     def __init__(
         self,

@@ -13,7 +13,7 @@ MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 
 
 class UploadValidationError(ValueError):
-    """Raised when a user upload cannot be safely indexed."""
+    """Se genera cuando una carga del usuario no puede indexarse de forma segura."""
 
 
 @dataclass(frozen=True)
@@ -24,7 +24,7 @@ class UploadedPDF:
 
 @dataclass
 class SessionCorpus:
-    """An isolated BM25 corpus whose files live only for one user session."""
+    """Corpus BM25 aislado cuyos archivos existen solo durante una sesión del usuario."""
 
     agent: ElderCareAgent
     documents: tuple[str, ...]
@@ -66,7 +66,7 @@ def validate_uploads(files: list[UploadedPDF]) -> tuple[UploadedPDF, ...]:
 
 
 def build_session_corpus(files: list[UploadedPDF], base_settings: Settings) -> SessionCorpus:
-    """Build an ephemeral, session-isolated BM25 agent from uploaded PDFs."""
+    """Construye un agente BM25 efímero y aislado por sesión a partir de PDF cargados."""
 
     validated = validate_uploads(files)
     temporary_directory = tempfile.TemporaryDirectory(prefix="aamia-upload-")

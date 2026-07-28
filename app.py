@@ -28,7 +28,7 @@ from eldercare_agent.uploads import (
 )
 
 st.set_page_config(
-    page_title="AAMIA | Apoyo al Adulto Mayor IA",
+    page_title="Apoyo al Adulto Mayor - Agente de IA",
     page_icon="🌿",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -160,7 +160,7 @@ if "messages" not in st.session_state:
 st.markdown(
     """
 <div class="hero">
-  <h1>🌿 AAMIA</h1>
+  <h1>🌿 Apoyo al Adulto Mayor - Agente de IA</h1>
   <p>Apoyo al Adulto Mayor con Inteligencia Artificial para un cuidado digno, activo y acompañado.</p>
 </div>
 """,
@@ -171,7 +171,7 @@ st.markdown(f'<div class="notice">⚕️ {MEDICAL_DISCLAIMER}</div>', unsafe_all
 try:
     with st.spinner("Preparando la biblioteca documental…"):
         base_agent, rebuilt = load_agent()
-except Exception as exc:  # noqa: BLE001 - present a friendly startup error in the UI
+except Exception as exc:  # noqa: BLE001 - mostrar un error de inicio comprensible en la interfaz
     st.error(f"No fue posible iniciar el agente: {exc}")
     st.info("Verifica que exista al menos un PDF en `docs/` y revisa la configuración del archivo `.env`.")
     st.stop()
@@ -191,7 +191,7 @@ with st.sidebar:
     second.metric("Páginas", stats["pages"])
     st.metric("Fragmentos consultables", stats["chunks"])
     provider_label = {
-        "extractive": "Local · sin API",
+        "extractive": "Modo extractivo · sin API",
         "openai": f"OpenAI · {settings.openai_model}",
         "oci": f"OCI GenAI · {settings.oci_genai_model}",
     }.get(settings.llm_provider, settings.llm_provider)
@@ -227,7 +227,7 @@ with st.sidebar:
                 new_corpus = build_session_corpus(uploads, settings)
         except UploadValidationError as exc:
             st.error(str(exc))
-        except Exception as exc:  # noqa: BLE001 - keep upload failures isolated from the public corpus
+        except Exception as exc:  # noqa: BLE001 - aislar los fallos de carga del corpus público
             st.error(f"No fue posible procesar los archivos: {type(exc).__name__}.")
         else:
             previous_corpus: SessionCorpus | None = st.session_state.get("session_corpus")

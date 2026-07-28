@@ -86,7 +86,7 @@ class ElderCareAgent:
         error: str | None = None
         try:
             answer = self.generator.generate(clean_question, sources)
-        except Exception as exc:  # noqa: BLE001 - every provider failure uses the safe local fallback
+        except Exception as exc:  # noqa: BLE001 - todo fallo del proveedor usa el respaldo local seguro
             error = f"{type(exc).__name__}: {exc}"
             answer = self.extractive_fallback.generate(clean_question, sources)
             provider = "extractive"
