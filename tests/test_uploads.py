@@ -31,6 +31,10 @@ class UploadValidationTests(unittest.TestCase):
         with self.assertRaisesRegex(UploadValidationError, "PDF válido"):
             validate_uploads([UploadedPDF("manual.pdf", b"contenido de texto")])
 
+    def test_rejects_markdown_files(self) -> None:
+        with self.assertRaisesRegex(UploadValidationError, "extensión .pdf"):
+            validate_uploads([UploadedPDF("notas.md", b"# Contexto editorial")])
+
 
 class SessionCorpusTests(unittest.TestCase):
     def test_builds_isolated_searchable_corpus_and_cleans_it(self) -> None:
