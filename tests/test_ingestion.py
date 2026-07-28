@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
 
-from eldercare_agent.ingestion import _split_page
+from eldercare_agent.ingestion import _is_summary_front_matter, _split_page
 
 
 class IngestionTests(unittest.TestCase):
@@ -14,6 +15,13 @@ class IngestionTests(unittest.TestCase):
 
     def test_short_page_is_one_chunk(self) -> None:
         self.assertEqual(_split_page("Texto breve y suficiente.", 500, 50), ["Texto breve y suficiente."])
+
+    def test_summary_front_matter_is_not_searchable(self) -> None:
+        summary = Path("docs/resumenes/01_salud_integral.pdf")
+        self.assertTrue(_is_summary_front_matter(summary, 1))
+        self.assertTrue(_is_summary_front_matter(summary, 2))
+        self.assertFalse(_is_summary_front_matter(summary, 3))
+        self.assertFalse(_is_summary_front_matter(Path("docs/01_salud_integral.pdf"), 1))
 
 
 if __name__ == "__main__":

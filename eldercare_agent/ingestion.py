@@ -78,6 +78,14 @@ def discover_pdfs(docs_dir: Path) -> list[Path]:
     )
 
 
+def _is_summary_front_matter(path: Path, page_number: int) -> bool:
+    """Excluye del texto consultable las páginas visuales de portada y metadatos."""
+
+    name = path.name
+    is_numbered_summary = len(name) >= 3 and name[:2].isdigit() and name[2] == "_"
+    return path.parent.name.casefold() == "resumenes" and is_numbered_summary and page_number <= 2
+
+
 def corpus_manifest(docs_dir: Path) -> dict[str, Any]:
     files: list[dict[str, Any]] = []
     for path in discover_pdfs(docs_dir):
@@ -108,9 +116,12 @@ def ingest_pdfs(settings: Settings) -> tuple[list[DocumentChunk], IngestionRepor
             document_metadata[path.name] = metadata
             title = metadata.get("/Title", "").strip() or path.stem
             for page_number, page in enumerate(reader.pages, start=1):
+                if _is_summary_front_matter(path, page_number):
+                    pages_skipped += 1
+                    continue
                 try:
                     text = normalize_text(page.extract_text() or "")
-                except Exception as exc:  # noqa: BLE001 - one corrupt page must not stop the corpus
+                except Exception as exc:  # noqa: BLE001 - una página dañada no debe detener el corpus
                     pages_skipped += 1
                     errors.append(f"{path.name}, página {page_number}: {type(exc).__name__}")
                     continue
@@ -128,7 +139,7 @@ def ingest_pdfs(settings: Settings) -> tuple[list[DocumentChunk], IngestionRepor
                         chunk_index=chunk_index,
                         title=title,
                     ))
-        except Exception as exc:  # noqa: BLE001 - isolate failures to the affected PDF
+        except Exception as exc:  # noqa: BLE001 - aislar los fallos al PDF afectado
             errors.append(f"{path.name}: {type(exc).__name__}: {exc}")
 
     report = IngestionReport(

@@ -16,9 +16,13 @@ venv/
 data/index/
 logs/*.jsonl
 tmp/
+output/
 
 docs/**/*.pdf
+docs/**/*.md
 !docs/AAMIA_guia_abierta_para_el_cuidado.pdf
+!docs/resumenes/
+!docs/resumenes/*.pdf
 
 # OS and IDE
 .DS_Store
