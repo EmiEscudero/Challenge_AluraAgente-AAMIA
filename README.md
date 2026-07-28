@@ -1,103 +1,85 @@
 # 🌿 AAMIA — Apoyo al Adulto Mayor IA
 
-Agente RAG en español para consultar una biblioteca documental sobre cuidado de personas adultas mayores: cuidados iniciales y cotidianos, alimentación, actividad física, movilidad, memoria y bienestar general.
+Agente RAG en español para consultar documentos sobre el cuidado de personas adultas mayores, con respuestas respaldadas por el archivo y la página PDF utilizados.
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
 ![Streamlit](https://img.shields.io/badge/Streamlit-1.x-FF4B4B?logo=streamlit&logoColor=white)
 ![Deploy](https://img.shields.io/badge/Deploy-Streamlit_Cloud-FF4B4B?logo=streamlit&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-14_passed-1f7a5c)
+![Tests](https://img.shields.io/badge/tests-16_passed-1f7a5c)
 
 🌐 **[Abrir AAMIA en Streamlit Cloud](https://challenge-alura-gente-aamia.streamlit.app/)**
 
-> **Aviso:** AAMIA ofrece información educativa basada en los documentos cargados. No diagnostica, no prescribe y no sustituye una valoración médica. Ante una posible urgencia, indica contactar inmediatamente a los servicios de emergencia locales.
+> **Aviso:** AAMIA ofrece información educativa basada en los documentos cargados. No diagnostica, prescribe ni sustituye una valoración médica. Ante una posible urgencia, indica contactar de inmediato a los servicios de emergencia locales.
 
 ## Demostración
 
-[![Ver la demostración de AAMIA en YouTube](https://i.ytimg.com/vi/m-19G62AS6g/hqdefault.jpg)](https://youtu.be/m-19G62AS6g)
+![Demostración animada de AAMIA](evidence/aamia-demo.gif)
 
-El video muestra una consulta real ejecutada en Docker: AAMIA recibe la pregunta, recupera evidencia de la biblioteca y presenta los documentos y páginas PDF utilizados.
+La demostración muestra una consulta real en Docker, desde la pregunta hasta los documentos y páginas recuperados. ▶️ **[Ver el video completo en YouTube](https://youtu.be/m-19G62AS6g)**
 
-▶️ **[Reproducir la demostración completa en YouTube](https://youtu.be/m-19G62AS6g)**
+## Problema y motivación
 
-## Problema y objetivo
+Buscar orientación en manuales extensos y dispersos puede ser difícil para familiares, cuidadores y equipos de apoyo. AAMIA convierte una colección de PDF en una biblioteca conversacional que facilita el acceso a la información sin ocultar su procedencia ni sustituir a profesionales de la salud.
 
-Familiares, cuidadores y equipos de apoyo suelen tener que buscar información en manuales extensos y dispersos. AAMIA transforma una colección de PDF en una biblioteca conversacional: recibe una pregunta, recupera los fragmentos más relevantes, construye una respuesta y muestra el documento y la página PDF utilizados.
-
-El objetivo del proyecto es facilitar el acceso a información documental sin ocultar su procedencia ni convertir al agente en sustituto de profesionales de salud.
+El proyecto nace de mi experiencia cotidiana al vivir con mis abuelos y observar cómo la movilidad, la salud y la alimentación requieren cada vez más atención. También responde al envejecimiento progresivo de la población en México y América Latina: busca acompañar un cuidado digno con información accesible y respaldada por documentos.
 
 ## Funcionalidades
 
-- Descubrimiento automático de todos los PDF dentro de `docs/`.
-- Carga de hasta 5 PDF de 15 MB cada uno para crear una biblioteca BM25 temporal y aislada por sesión.
-- Extracción por página, limpieza de texto y fragmentación con solapamiento.
-- Recuperación BM25 local con expansión de términos del dominio y reranking por diversidad.
-- Respuestas respaldadas por fuentes, título del documento y página PDF.
-- Modo local funcional sin API key y generación opcional con OpenAI u OCI Generative AI.
-- Rechazo explícito de preguntas fuera del alcance documental.
-- Aviso prioritario ante frases que podrían describir una urgencia.
-- Protección básica frente a prompt injection proveniente de los documentos.
-- Historial de conversación durante la sesión y retroalimentación positiva/negativa.
-- Auditoría en JSON Lines con hashes y metadatos; el contenido se excluye por defecto.
-- Índice persistente y reconstrucción automática cuando cambian los PDF.
-- Docker, Docker Compose, health check, CI y guía de despliegue en OCI.
+- Descubre e indexa automáticamente los PDF de `docs/` por página.
+- Genera cinco resúmenes temáticos trazables y recupera evidencia con BM25, expansión de términos y reranking por diversidad.
+- Permite cargar hasta 5 PDF de 15 MB en una biblioteca temporal y aislada por sesión.
+- Responde con fuentes y páginas, rechaza preguntas fuera del corpus y prioriza avisos ante posibles urgencias.
+- Funciona sin API key en modo extractivo o, de forma opcional, con OpenAI u OCI Generative AI.
+- Mantiene historial y feedback durante la sesión, y auditoría JSONL sin guardar el contenido de forma predeterminada.
+- Protege de forma básica frente a prompt injection documental y reconstruye el índice cuando cambian los PDF.
+- Incluye Docker, health check, CI y una guía de despliegue en OCI.
 
-## Resultado de la ingesta real
+## Corpus e ingesta
 
-La validación local utilizó los 19 PDF de trabajo más la guía abierta incluida en el repositorio. El despliegue creado directamente desde GitHub inicia con la guía abierta y permite que cada visitante cargue sus propios documentos temporalmente.
+La validación local utilizó 47 PDF fuente y cinco resúmenes temáticos. Tres archivos Markdown sirvieron como contexto editorial y no se indexaron.
 
 | Métrica | Resultado |
 |---|---:|
-| Documentos PDF | 20 (19 locales + 1 guía abierta del proyecto) |
-| Páginas revisadas | 3,059 |
-| Páginas con texto indexadas | 2,818 |
-| Páginas vacías o solo imagen omitidas | 241 |
-| Fragmentos consultables | 4,366 |
+| Documentos PDF | 52 (47 fuentes + 5 resúmenes) |
+| Páginas revisadas | 3,417 |
+| Páginas con texto indexadas | 3,163 |
+| Páginas omitidas | 254 |
+| Fragmentos consultables | 5,401 |
 | Errores de ingesta | 0 |
+
+El corpus depende del entorno:
+
+- **Local:** usa los PDF presentes en la copia local de `docs/`, incluidos los 47 archivos fuente.
+- **Streamlit Cloud:** solo usa los PDF versionados en GitHub. Los 47 archivos fuente están excluidos por `.gitignore`; la guía abierta es el único PDF confirmado y los resúmenes estarán disponibles cuando se envíen a la rama desplegada.
+- **Carga desde la interfaz:** crea una biblioteca temporal por sesión; no modifica la biblioteca pública ni conserva los archivos al terminar.
+
+Por ello, los resultados locales pueden diferir de los obtenidos en Streamlit Cloud.
 
 ## Arquitectura
 
 ```mermaid
 flowchart LR
     A["PDF en docs/ o carga temporal"] --> B["Extracción por página con pypdf"]
-    B --> C["Limpieza y chunking con metadatos"]
+    B --> C["Limpieza y fragmentación con metadatos"]
     C --> D["Índice BM25 persistente"]
     Q["Pregunta en Streamlit"] --> S["Filtro de alcance y urgencias"]
-    S --> R["Recuperación + expansión + reranking"]
+    S --> R["Recuperación, expansión y reranking"]
     D --> R
     R --> G{"Proveedor configurado"}
     G -->|Sin credenciales| E["Respuesta extractiva"]
     G -->|OpenAI| O["Responses API"]
-    G -->|OCI| I["OCI Generative AI Responses API"]
+    G -->|OCI| I["OCI Generative AI"]
     E --> U["Respuesta, fuentes y páginas"]
     O --> U
     I --> U
     U --> L["Auditoría JSONL y feedback"]
 ```
 
-La recuperación es local y barata: no requiere descargar modelos ni una base vectorial externa. El proveedor generativo recibe únicamente los fragmentos seleccionados y un prompt que exige responder desde el contexto, citar fuentes y reconocer cuando falta información.
+La recuperación es local: `pypdf` extrae y fragmenta el texto, BM25 selecciona la evidencia y el reranker conserva hasta cinco fuentes diversas. Con `LLM_PROVIDER=extractive`, el sistema muestra las tres oraciones más relevantes sin usar un modelo ni generar costos de API. Si se configura OpenAI u OCI, solo se envían al modelo los fragmentos recuperados.
 
-## Cómo se procesa una pregunta
+## Tecnologías y estructura
 
-1. Al iniciar, `pypdf` extrae el texto de cada página, lo limpia y lo divide en fragmentos con metadatos.
-2. Los fragmentos se guardan en un índice BM25 comprimido dentro de `data/index/`.
-3. La pregunta pasa por los filtros de alcance y posibles urgencias.
-4. BM25 recupera los fragmentos con mayor coincidencia y el reranker selecciona hasta cinco fuentes distintas.
-5. El proveedor configurado construye la respuesta y la interfaz muestra sus fuentes y páginas.
-
-Con la configuración predeterminada `LLM_PROVIDER=extractive` no se ejecuta un modelo de lenguaje. El sistema puntúa las oraciones recuperadas por coincidencia con la pregunta y presenta las tres más relevantes. Esto evita API keys y costo por consulta, aunque la redacción es menos natural que la de un LLM.
-
-## Tecnologías
-
-- **Python 3.12**: aplicación y pipeline.
-- **pypdf**: extracción de texto y metadatos por página.
-- **BM25**: búsqueda local eficiente con índice comprimido.
-- **Streamlit**: interfaz web conversacional.
-- **OpenAI SDK / Responses API**: adaptador generativo opcional. El modelo económico predeterminado es `gpt-5.6-luna`, configurable por entorno. Consulta la [guía oficial de modelos](https://developers.openai.com/api/docs/guides/latest-model).
-- **OCI Generative AI**: proveedor opcional mediante su endpoint compatible con OpenAI.
-- **Docker y OCI Compute Ampere A1**: empaquetado y despliegue compatible con la capa Always Free.
-- **GitHub Actions + Ruff + unittest**: integración continua y calidad.
-
-## Estructura
+El proyecto usa Python 3.12, pypdf, BM25, Streamlit, Docker, Ruff y unittest. La generación opcional se integra con OpenAI Responses API u OCI Generative AI.
 
 ```text
 .
@@ -105,16 +87,16 @@ Con la configuración predeterminada `LLM_PROVIDER=extractive` no se ejecuta un 
 ├── eldercare_agent/
 │   ├── ingestion.py              # Extracción, limpieza y fragmentación
 │   ├── retriever.py              # Índice BM25 y reranking
-│   ├── uploads.py                # Corpus temporal aislado por sesión
+│   ├── uploads.py                # Corpus temporal por sesión
 │   ├── llm.py                    # Modos extractivo, OpenAI y OCI
 │   ├── service.py                # Orquestación del agente
 │   ├── safety.py                 # Alcance, urgencias y aviso médico
 │   └── audit.py                  # Trazabilidad y feedback
 ├── docs/                          # Base documental
 ├── scripts/                       # Indexación y smoke test
-├── tests/                         # Pruebas unitarias
+├── tests/                         # Pruebas
 ├── deploy/oci/                    # Automatización y guía OCI
-├── evidence/                      # Evidencia visual local
+├── evidence/                      # Evidencia visual
 ├── Dockerfile
 └── compose.yaml
 ```
@@ -141,11 +123,9 @@ cp .env.example .env
 streamlit run app.py
 ```
 
-Abre <http://localhost:8501>. En el primer arranque, la aplicación construye `data/index/bm25-index.json.gz`. Con la colección incluida localmente tomó aproximadamente un minuto; los siguientes arranques cargan el índice existente.
+Abre <http://localhost:8501>. En el primer arranque se crea `data/index/bm25-index.json.gz`; con la colección local completa tarda cerca de un minuto y luego se reutiliza. Los PDF escaneados necesitan OCR previo.
 
-Desde la barra lateral también puedes cargar hasta 5 PDF de 15 MB cada uno. La aplicación construye un índice BM25 separado para esa sesión; al volver a la biblioteca pública o finalizar la sesión, elimina los archivos y el índice temporal. Los PDF escaneados sin una capa de texto requieren OCR previo.
-
-También puedes usar la terminal:
+También puedes consultar estadísticas, hacer una pregunta o ejecutar el smoke test desde la terminal:
 
 ```bash
 python -m eldercare_agent.cli --stats
@@ -155,15 +135,13 @@ python scripts/smoke_test.py
 
 ## Configuración del modelo
 
-El despliegue gratuito descrito en este repositorio usa:
+El modo gratuito y predeterminado no llama a servicios externos:
 
 ```dotenv
 LLM_PROVIDER=extractive
 ```
 
-Este modo no llama a OpenAI ni a OCI Generative AI. Si se configura un proveedor generativo, BM25 sigue haciendo la recuperación y únicamente los fragmentos seleccionados se envían al modelo:
-
-Para obtener respuestas redactadas y sintetizadas con OpenAI:
+Para usar OpenAI:
 
 ```dotenv
 LLM_PROVIDER=openai
@@ -171,7 +149,7 @@ OPENAI_API_KEY=<secreto>
 OPENAI_MODEL=gpt-5.6-luna
 ```
 
-Para ejecutar la generación dentro del ecosistema OCI:
+Para usar OCI Generative AI:
 
 ```dotenv
 LLM_PROVIDER=oci
@@ -181,23 +159,7 @@ OCI_GENAI_PROJECT=ocid1.generativeaiproject...
 OCI_GENAI_MODEL=openai.gpt-oss-120b
 ```
 
-OCI recomienda Responses API para aplicaciones nuevas y permite utilizar el SDK de OpenAI con un endpoint de OCI; consulta su [QuickStart oficial](https://docs.oracle.com/en-us/iaas/Content/generative-ai/get-started-agents.htm).
-
-Nunca publiques `.env`, API keys, tokens de OCIR ni llaves privadas. El repositorio ya los excluye.
-
-## Ejemplos verificados
-
-**Pregunta:** ¿Cómo debe organizarse una sesión de actividad física?
-
-**Respuesta local:** La biblioteca indica que una sesión tiene tres partes: inicial, principal y final o vuelta a la calma. La interfaz cita *Tercera edad: actividad física y salud*, páginas PDF 94 y 95.
-
-**Pregunta:** ¿Qué recomendaciones hay sobre alimentación del adulto mayor?
-
-**Respuesta local:** El agente recupera recomendaciones sobre una alimentación variada, apetecible y nutritiva, respetando las indicaciones médicas o nutricionales, y muestra los manuales y páginas consultados.
-
-**Pregunta:** ¿Cuál es la capital de Francia?
-
-**Respuesta:** “La pregunta parece estar fuera del alcance de esta biblioteca…” No se adjuntan fuentes ni se intenta inventar una respuesta.
+Consulta la [guía oficial de modelos de OpenAI](https://developers.openai.com/api/docs/guides/latest-model) o el [QuickStart de OCI](https://docs.oracle.com/en-us/iaas/Content/generative-ai/get-started-agents.htm). Nunca publiques `.env`, API keys, tokens de OCIR ni llaves privadas.
 
 ## Pruebas y calidad
 
@@ -206,15 +168,9 @@ ruff check .
 python -m unittest discover -s tests -v
 ```
 
-Validaciones realizadas:
+La validación incluye 16 pruebas unitarias y de integración, un smoke test temático, el health check `/_stcore/health`, una prueba de interfaz con carga de PDF y la ingesta de los 52 documentos sin errores.
 
-- 14 pruebas unitarias y de integración aprobadas.
-- Smoke test sobre alimentación, actividad física, memoria, caídas y una pregunta fuera de alcance.
-- Health check local: `/_stcore/health` responde `200 ok`.
-- Prueba de interfaz en navegador a 1440 × 1100, incluida la carga de un PDF y una consulta BM25 con fuentes.
-- Ingesta completa de los 20 PDF sin errores.
-
-## Docker
+## Docker y despliegue
 
 ```bash
 cp .env.example .env
@@ -222,35 +178,29 @@ docker compose up --build -d
 docker compose ps
 ```
 
-La imagen corre como usuario sin privilegios, expone el puerto `8501` y tiene health check. Los volúmenes conservan el índice y los logs. El build incorpora los PDF que existan en `docs/`.
+La imagen se ejecuta sin privilegios en el puerto `8501`, incorpora los PDF existentes en `docs/` y conserva índice y logs mediante volúmenes.
 
-## Despliegue
+La aplicación está desplegada desde `main` en **[Streamlit Community Cloud](https://challenge-alura-gente-aamia.streamlit.app/)**. Para OCI, la opción gratuita recomendada es una VM `VM.Standard.A1.Flex` con 1 OCPU, 6 GB de RAM, Ubuntu, Docker Compose y `LLM_PROVIDER=extractive`. Consulta la [guía completa de despliegue en OCI](deploy/oci/README.md).
 
-La aplicación está publicada en **[Streamlit Community Cloud](https://challenge-alura-gente-aamia.streamlit.app/)** desde la rama `main`. El despliegue utiliza `app.py`, `requirements.txt` y `.streamlit/config.toml` directamente desde este repositorio.
+## Seguridad y límites
 
-### Oracle Cloud
-
-La ruta recomendada para mantener costo cero es una VM **OCI Compute VM.Standard.A1.Flex** con 1 OCPU y 6 GB de RAM, Ubuntu y Docker Compose. No requiere OCI Generative AI: deja `LLM_PROVIDER=extractive` para evitar consumo de APIs pagadas. La guía desde la creación de la cuenta hasta la validación pública está en [deploy/oci/README.md](deploy/oci/README.md).
-
-## Seguridad, privacidad y límites
-
-- Las respuestas dependen de la calidad y vigencia de los documentos.
-- Las páginas sin texto OCR se omiten; para una colección totalmente escaneada debe agregarse OCR.
-- Las cargas están limitadas a 5 PDF de 15 MB cada uno y permanecen en almacenamiento temporal aislado por sesión.
+- Las respuestas dependen de la calidad y vigencia del corpus; las páginas sin texto se omiten.
 - No deben cargarse expedientes clínicos ni documentos con datos personales o sensibles.
-- El modo extractivo es deliberadamente conservador y puede conservar rasgos de redacción del documento.
-- Las citas usan el número de página física del PDF, que puede diferir de la numeración impresa.
+- El modo extractivo puede conservar rasgos de redacción del documento.
+- Las citas usan la página física del PDF, que puede diferir de su numeración impresa.
 - La detección de urgencias es preventiva, no un sistema de triaje clínico.
-- `LOG_CONTENT=false` evita guardar preguntas y respuestas completas. Actívalo solo con una política de privacidad adecuada.
+- `LOG_CONTENT=false` evita guardar preguntas y respuestas completas; solo debe activarse con una política de privacidad adecuada.
 
-Consulta [SECURITY.md](SECURITY.md) para reportar vulnerabilidades y revisar las medidas implementadas.
+Consulta [SECURITY.md](SECURITY.md) para conocer las medidas implementadas o reportar vulnerabilidades.
 
-## Evidencia del desarrollo
-
-- [Pantalla inicial local](evidence/local-app.png)
-- [Respuesta local con fuentes](evidence/local-answer.png)
-- [Detalle local de documentos y páginas](evidence/local-answer-sources.png)
+## Evidencia
+#### Pantalla inicial
+![Pantalla inicial](evidence/local-app.png)
+#### Respuesta con fuentes
+![Respuesta con fuentes](evidence/local-answer.png)
+#### Detalle de documentos y páginas
+![Detalle de documentos y páginas](evidence/local-answer-sources.png)
 
 ## Licencia
 
-El código se distribuye bajo licencia MIT. La guía de AAMIA incluida en `docs/` se distribuye bajo CC BY 4.0.
+El código se distribuye bajo licencia MIT. La guía de AAMIA incluida en `docs/` usa CC BY 4.0.
